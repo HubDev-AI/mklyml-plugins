@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "types": ["bun-types"],
+    "baseUrl": ".",
+    "paths": {
+      "@mklyml/core": ["../mkly/src/index.ts"],
+      "@mklyml/kits/newsletter": ["../mkly-kits/newsletter/src/index.ts"],
+      "@mklyml/plugins/email": ["../mkly-plugins/email/src/index.ts"]
+    }
+  },
+  "include": [
+    "email/src/**/*.ts",
+    "email/tests/**/*.ts",
+    "docs/src/**/*.ts",
+    "docs/tests/**/*.ts",
+    "seo/src/**/*.ts",
+    "seo/tests/**/*.ts",
+    "newsletter-ai/src/**/*.ts",
+    "newsletter-ai/tests/**/*.ts"
+  ]
+}

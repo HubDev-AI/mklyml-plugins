@@ -1,0 +1,23 @@
+{
+  "name": "@mklyml/plugins-newsletter-ai",
+  "private": true,
+  "version": "0.1.0",
+  "description": "AI-powered newsletter generation for mkly — template, content, and notes generation",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "typecheck": "bunx tsc --noEmit",
+    "test": "bun test",
+    "embed-prompts": "bun run scripts/embed-prompts.ts"
+  },
+  "dependencies": {
+    "@mklyml/core": "file:../../mkly",
+    "@mklyml/kits": "file:../../mkly-kits"
+  },
+  "devDependencies": {
+    "typescript": "~5.8.2",
+    "@types/bun": "latest",
+    "@mklyml/plugins": "file:../../mkly-plugins"
+  }
+}

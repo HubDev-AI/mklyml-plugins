@@ -1,0 +1,49 @@
+{
+  "name": "@mklyml/plugins",
+  "version": "0.1.2",
+  "license": "Apache-2.0",
+  "description": "Plugins for mkly — email, docs, SEO, and newsletter AI",
+  "type": "module",
+  "exports": {
+    "./email": {
+      "types": "./dist/email.d.ts",
+      "import": "./dist/email.js"
+    },
+    "./docs": {
+      "types": "./dist/docs.d.ts",
+      "import": "./dist/docs.js"
+    },
+    "./seo": {
+      "types": "./dist/seo.d.ts",
+      "import": "./dist/seo.js"
+    },
+    "./newsletter-ai": {
+      "types": "./dist/newsletter-ai.d.ts",
+      "import": "./dist/newsletter-ai.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup",
+    "prepublishOnly": "bun run build",
+    "typecheck": "bunx tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@mklyml/core": "^0.1.0"
+  },
+  "peerDependencies": {
+    "@mklyml/core": ">=0.1.0",
+    "@mklyml/kits": ">=0.1.0"
+  },
+  "peerDependenciesMeta": {
+    "@mklyml/kits": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "tsup": "8.5.0",
+    "typescript": "5.8.2",
+    "@types/bun": "latest"
+  }
+}
