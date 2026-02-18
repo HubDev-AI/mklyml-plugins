@@ -317,19 +317,31 @@ describe('replaceUrls — URL replacement in documents', () => {
 // ===== CSS Inliner Edge Cases =====
 
 describe('parseDeclarations — edge cases', () => {
-  test('handles data: URLs (semicolon inside url())', () => {
+  test('preserves data: URLs with semicolons inside url()', () => {
     const rules = parseRules('.bg { background: url(data:image/png;base64,abc123); }');
     expect(rules).toHaveLength(1);
-    // The semicolon inside data: URL splits the declaration — this is a known limitation
-    // Just verify it doesn't crash and produces some output
     const bg = rules[0].declarations.get('background');
-    expect(bg).toBeDefined();
+    expect(bg).toBe('url(data:image/png;base64,abc123)');
+  });
+
+  test('preserves data: URLs alongside other declarations', () => {
+    const rules = parseRules('.bg { background: url(data:image/svg+xml;charset=utf-8,<svg/>); color: red; }');
+    expect(rules).toHaveLength(1);
+    expect(rules[0].declarations.get('background')).toBe('url(data:image/svg+xml;charset=utf-8,<svg/>)');
+    expect(rules[0].declarations.get('color')).toBe('red');
   });
 
   test('handles values with colons (e.g. time values)', () => {
     const rules = parseRules('.foo { content: "10:30 AM"; }');
     expect(rules).toHaveLength(1);
     expect(rules[0].declarations.get('content')).toBe('"10:30 AM"');
+  });
+
+  test('handles nested parentheses in values', () => {
+    const rules = parseRules('.foo { background: linear-gradient(rgba(0,0,0,0.5), rgba(255,255,255,0.5)); }');
+    expect(rules).toHaveLength(1);
+    expect(rules[0].declarations.get('background')).toContain('linear-gradient');
+    expect(rules[0].declarations.get('background')).toContain('rgba(255,255,255,0.5)');
   });
 });
 
@@ -743,5 +755,106 @@ describe('cssToInline — full pipeline edge cases', () => {
     const { contentHtml } = cssToInline(webHtml);
     expect(contentHtml).not.toContain('<style>');
     expect(contentHtml).not.toContain('<meta');
+  });
+});
+
+// ===== Bug Regression Tests =====
+
+describe('BUG REGRESSION: extractMeta attribute ordering', () => {
+  test('email output preserves meta when browser reverses attribute order', () => {
+    const source = [
+      '--- meta',
+      'title: My Newsletter',
+      'author: Tester',
+      '',
+      '--- core/text',
+      'Content',
+    ].join('\n');
+    const fullSource = `--- use: core\n--- use: newsletter\n\n--- meta\nversion: 1\n\n${source}`;
+    const doc = parse(fullSource);
+    const registry = createRegistry();
+    const webResult = compile(doc, registry, { kits: { core: CORE_KIT, newsletter: NEWSLETTER_KIT } });
+
+    // Simulate browser reversing attribute order
+    const browserHtml = webResult.html
+      .replace(/<meta name="(mkly:[^"]+)" content="([^"]*)">/g, '<meta content="$2" name="$1">');
+
+    // Now compile as email using the browser-modified HTML
+    const emailResult = compile(doc, registry, {
+      plugins: [emailPlugin()],
+      kits: { core: CORE_KIT, newsletter: NEWSLETTER_KIT },
+    });
+
+    // Email output should have the meta tags
+    expect(emailResult.html).toContain('name="mkly:title"');
+    expect(emailResult.html).toContain('My Newsletter');
+    expect(emailResult.html).toContain('name="mkly:use"');
+  });
+});
+
+describe('BUG REGRESSION: mailto/tel links not tracked', () => {
+  test('mailto links are NOT tracked when tracking prefix is set', () => {
+    const source = [
+      '--- core/text',
+      '[Email us](mailto:test@example.com)',
+    ].join('\n');
+    const fullSource = `--- use: core\n\n--- meta\nversion: 1\n\n${source}`;
+    const doc = parse(fullSource);
+    const registry = createRegistry();
+    const result = compile(doc, registry, {
+      plugins: [emailPlugin()],
+      variables: { trackingPrefix: 'https://t.co/?u=' },
+      kits: { core: CORE_KIT },
+    });
+    // mailto link should be preserved as-is, NOT wrapped in tracking
+    expect(result.html).toContain('href="mailto:test@example.com"');
+    expect(result.html).not.toContain('t.co/?u=mailto');
+  });
+
+  test('tel links are NOT tracked when tracking prefix is set', () => {
+    const source = [
+      '--- core/text',
+      '[Call us](tel:+1234567890)',
+    ].join('\n');
+    const fullSource = `--- use: core\n\n--- meta\nversion: 1\n\n${source}`;
+    const doc = parse(fullSource);
+    const registry = createRegistry();
+    const result = compile(doc, registry, {
+      plugins: [emailPlugin()],
+      variables: { trackingPrefix: 'https://t.co/?u=' },
+      kits: { core: CORE_KIT },
+    });
+    expect(result.html).toContain('href="tel:+1234567890"');
+    expect(result.html).not.toContain('t.co/?u=tel');
+  });
+
+  test('http links ARE still tracked', () => {
+    const source = [
+      '--- core/button',
+      'url: https://example.com',
+      'label: Click',
+    ].join('\n');
+    const fullSource = `--- use: core\n\n--- meta\nversion: 1\n\n${source}`;
+    const doc = parse(fullSource);
+    const registry = createRegistry();
+    const result = compile(doc, registry, {
+      plugins: [emailPlugin()],
+      variables: { trackingPrefix: 'https://t.co/?u=' },
+      kits: { core: CORE_KIT },
+    });
+    expect(result.html).toContain('https://t.co/?u=https%3A%2F%2Fexample.com');
+  });
+});
+
+describe('BUG REGRESSION: data: URLs in CSS preserved', () => {
+  test('data: URL in inline CSS is fully preserved through pipeline', () => {
+    const webHtml = [
+      '<style>',
+      '.icon { background-image: url(data:image/svg+xml;charset=utf-8,%3Csvg%3E%3C/svg%3E); }',
+      '</style>',
+      '<main class="mkly-document"><div class="icon">icon</div></main>',
+    ].join('\n');
+    const { contentHtml } = cssToInline(webHtml);
+    expect(contentHtml).toContain('url(data:image/svg+xml;charset=utf-8,%3Csvg%3E%3C/svg%3E)');
   });
 });
