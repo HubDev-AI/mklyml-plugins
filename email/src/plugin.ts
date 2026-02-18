@@ -7,12 +7,14 @@ import { cssToInline } from './css-inliner';
 // Link tracking (post-process all <a href="..."> in the HTML)
 // ---------------------------------------------------------------------------
 
+const SKIP_TRACKING_RE = /^(mailto|tel|sms):/i;
+
 function applyLinkTracking(html: string, ctx: CompileContext): string {
   const prefix = ctx.variables.trackingPrefix;
   if (!prefix) return html;
 
   return html.replace(/<a\s([^>]*?)href="([^"]*)"([^>]*)>/gi, (match, before, url, after) => {
-    if (!url) return match;
+    if (!url || SKIP_TRACKING_RE.test(url)) return match;
     const tracked = trackUrl(url, ctx);
     return `<a ${before}href="${tracked}"${after}>`;
   });
@@ -84,12 +86,14 @@ function extractMeta(html: string): { meta: Record<string, string>; uses: string
   const uses: string[] = [];
   let maxWidth = 600;
 
-  // Extract mkly meta tags
-  const metaRe = /<meta\s+name="mkly:([^"]*?)"\s+content="([^"]*?)"\s*>/gi;
+  // Extract mkly meta tags (handle both attribute orderings: name-first and content-first)
+  const metaRe = /<meta\s+(?:name="mkly:([^"]*?)"\s+content="([^"]*?)"|content="([^"]*?)"\s+name="mkly:([^"]*?)")\s*\/?>/gi;
   let m: RegExpExecArray | null;
   while ((m = metaRe.exec(html)) !== null) {
-    const key = m[1];
-    const value = m[2].replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&lt;/g, '<');
+    const key = m[1] ?? m[4];
+    const rawValue = m[2] ?? m[3];
+    if (!key || !rawValue) continue;
+    const value = rawValue.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&lt;/g, '<');
     if (key === 'use') {
       uses.push(value);
     } else {
