@@ -142,19 +142,33 @@ export function parseRules(css: string): CSSRule[] {
   return rules;
 }
 
+function pushDeclaration(raw: string, result: Array<[string, string]>): void {
+  const trimmed = raw.trim();
+  if (!trimmed) return;
+  const colonIdx = trimmed.indexOf(':');
+  if (colonIdx === -1) return;
+  const prop = trimmed.slice(0, colonIdx).trim();
+  const value = trimmed.slice(colonIdx + 1).trim();
+  if (prop && value) {
+    result.push([prop, value]);
+  }
+}
+
 function parseDeclarations(raw: string): Array<[string, string]> {
   const result: Array<[string, string]> = [];
-  for (const decl of raw.split(';')) {
-    const trimmed = decl.trim();
-    if (!trimmed) continue;
-    const colonIdx = trimmed.indexOf(':');
-    if (colonIdx === -1) continue;
-    const prop = trimmed.slice(0, colonIdx).trim();
-    const value = trimmed.slice(colonIdx + 1).trim();
-    if (prop && value) {
-      result.push([prop, value]);
+  let current = '';
+  let parenDepth = 0;
+  for (const ch of raw) {
+    if (ch === '(') parenDepth++;
+    else if (ch === ')') parenDepth = Math.max(0, parenDepth - 1);
+    if (ch === ';' && parenDepth === 0) {
+      pushDeclaration(current, result);
+      current = '';
+    } else {
+      current += ch;
     }
   }
+  pushDeclaration(current, result);
   return result;
 }
 
