@@ -88,6 +88,13 @@ describe('CSS inliner: parseRules', () => {
     expect(rules[0].selector).toBe('.foo');
     expect(rules[1].selector).toBe('.bar');
   });
+
+  test('does not split commas inside :is()', () => {
+    const rules = parseRules('.mkly-document :is(p, li, h1), .foo { color: blue; }');
+    expect(rules).toHaveLength(2);
+    expect(rules[0].selector).toBe('.mkly-document :is(p, li, h1)');
+    expect(rules[1].selector).toBe('.foo');
+  });
 });
 
 describe('CSS inliner: variable resolution', () => {
@@ -158,6 +165,15 @@ describe('CSS inliner: inlineStyles', () => {
     const rules = parseRules('.parent .child { color: green; }');
     const result = inlineStyles(html, rules);
     expect(result).toContain('style="color:green"');
+  });
+
+  test('handles :is() for descendant targets', () => {
+    const html = '<main class="mkly-document"><p>one</p><strong>two</strong><ul><li>three</li></ul></main>';
+    const rules = parseRules('.mkly-document :is(p, li) { color: green; }');
+    const result = inlineStyles(html, rules);
+    expect(result).toContain('<p style="color:green">one</p>');
+    expect(result).toContain('<li style="color:green">three</li>');
+    expect(result).toContain('<strong>two</strong>');
   });
 });
 
@@ -320,6 +336,27 @@ describe('email plugin produces inline-styled email document', () => {
     const html = compileEmail(`--- newsletter/category\ntitle: Tech\n--- newsletter/item\nItem text\n--- /newsletter/category`);
     expect(html).toContain('Tech');
     expect(html).toContain('Item text');
+  });
+
+  test('paragraph color override keeps strong/em inheriting paragraph color', () => {
+    const html = compileEmail([
+      '--- style',
+      'newsletter/tipOfTheDay',
+      '  >.s1',
+      '    color: #269762',
+      '',
+      '--- newsletter/tipOfTheDay',
+      'title: Pro Tip',
+      '',
+      '**Layer 2 — Task & Constraints.** Body text and *italic note* {.s1}',
+    ].join('\n'));
+
+    expect(html).toContain('<p');
+    expect(html).toContain('color:#269762');
+    expect(html).toContain('<strong>Layer 2 — Task &amp; Constraints.</strong>');
+    expect(html).toContain('<em>italic note</em>');
+    expect(html).not.toContain('<p style="margin:0 0 0.5rem;font-size:0.95em;color:#269762"><strong style=');
+    expect(html).not.toContain('<p style="margin:0 0 0.5rem;font-size:0.95em;color:#269762"><em style=');
   });
 });
 
