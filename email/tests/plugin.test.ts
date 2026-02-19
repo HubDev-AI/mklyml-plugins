@@ -553,7 +553,7 @@ describe('email handles raw CSS and pseudo selectors', () => {
     ].join('\n');
     const html = compileEmail(source);
     // Base border-radius should be inlined
-    expect(html).toContain('border-radius:8px');
+    expect(html).toContain('border-radius:0.5rem');
     // Hover opacity should NOT be inlined
     expect(html).not.toContain('opacity:0.5');
   });
