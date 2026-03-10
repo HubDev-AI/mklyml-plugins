@@ -1,6 +1,6 @@
 {
   "name": "@mklyml/plugins",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "license": "PolyForm-Noncommercial-1.0.0",
   "description": "Plugins for mkly — email, docs, SEO, and newsletter AI",
   "type": "module",
