@@ -12,12 +12,12 @@
     "embed-prompts": "bun run scripts/embed-prompts.ts"
   },
   "dependencies": {
-    "@mklyml/core": "^0.2.0",
-    "@mklyml/kits": "^0.2.0"
+    "@mklyml/core": ">=0.1.0",
+    "@mklyml/kits": ">=0.1.0"
   },
   "devDependencies": {
     "typescript": "~5.8.2",
     "@types/bun": "latest",
-    "@mklyml/plugins": "^0.1.3"
+    "@mklyml/plugins": ">=0.1.0"
   }
 }
