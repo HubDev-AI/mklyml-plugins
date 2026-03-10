@@ -4,7 +4,7 @@
     "": {
       "name": "@mkly-plugins/seo",
       "dependencies": {
-        "@mklyml/core": ">=0.1.0",
+        "@mklyml/core": "^0.2.0",
       },
       "devDependencies": {
         "@types/bun": "latest",
@@ -13,7 +13,7 @@
     },
   },
   "packages": {
-    "@mklyml/core": ["@mklyml/core@0.1.2", "", { "dependencies": { "zod": "4.3.6" } }, "sha512-f7+S4ku28+ubB6w3kRR3TUnWC5iRIfoPyfED331yRk3BCt5zrFfFADpRAag1e77vu+8QUN34cujFcCF/CYU4RA=="],
+    "@mklyml/core": ["@mklyml/core@0.2.0", "", { "dependencies": { "zod": "4.3.6" } }, "sha512-e/xgC5X1j0+J7hGkST8hFDjV4kcBFEwdznHEk3HHY2YyCRk8DbIOt6wMo5RGgJ3yReRronLUprYb8CFU0GR8jg=="],
 
     "@types/bun": ["@types/bun@1.3.8", "", { "dependencies": { "bun-types": "1.3.8" } }, "sha512-3LvWJ2q5GerAXYxO2mffLTqOzEu5qnhEAlh48Vnu8WQfnmSwbgagjGZV6BoHKJztENYEDn6QmVd949W4uESRJA=="],
 

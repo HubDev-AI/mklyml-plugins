@@ -4,8 +4,8 @@
     "": {
       "name": "@mkly-plugins/newsletter-ai",
       "dependencies": {
-        "@mklyml/core": ">=0.1.0",
-        "@mklyml/kits": ">=0.1.0",
+        "@mklyml/core": "^0.2.0",
+        "@mklyml/kits": "^0.2.0",
       },
       "devDependencies": {
         "@mklyml/plugins": ">=0.1.0",
@@ -15,9 +15,9 @@
     },
   },
   "packages": {
-    "@mklyml/core": ["@mklyml/core@0.1.2", "", { "dependencies": { "zod": "4.3.6" } }, "sha512-f7+S4ku28+ubB6w3kRR3TUnWC5iRIfoPyfED331yRk3BCt5zrFfFADpRAag1e77vu+8QUN34cujFcCF/CYU4RA=="],
+    "@mklyml/core": ["@mklyml/core@0.2.0", "", { "dependencies": { "zod": "4.3.6" } }, "sha512-e/xgC5X1j0+J7hGkST8hFDjV4kcBFEwdznHEk3HHY2YyCRk8DbIOt6wMo5RGgJ3yReRronLUprYb8CFU0GR8jg=="],
 
-    "@mklyml/kits": ["@mklyml/kits@0.1.2", "", { "dependencies": { "@mklyml/core": "^0.1.0", "zod": "^4.3.6" } }, "sha512-M7wOmgiETFYXj6cVE6zdCmQht+KY4zpAnjtstOn5sat1CqWXmI10pS+0kzD2UapTyc7ISYKtzuEvKBFKs3OAlw=="],
+    "@mklyml/kits": ["@mklyml/kits@0.2.0", "", { "dependencies": { "@mklyml/core": "^0.2.0", "zod": "^4.3.6" } }, "sha512-Fy+2RHoCKuKbpvHlzWBUQO1dSkZpE388bFqU3TWBN+0Lb0G+wahYIGJB5VCnpRF9y08bZliukKk7qhILEM5knw=="],
 
     "@mklyml/plugins": ["@mklyml/plugins@0.1.2", "", { "dependencies": { "@mklyml/core": "^0.1.0" }, "peerDependencies": { "@mklyml/kits": ">=0.1.0" }, "optionalPeers": ["@mklyml/kits"] }, "sha512-DTzw1qgySUpqY43aR/5zRhNbIS/2nBfFFAvmVvX8rTjTPsSoTZH8E5HDm/FMwcD+yKOGWqxmLaZrCVcTFQQbQw=="],
 
@@ -32,5 +32,7 @@
     "undici-types": ["undici-types@7.16.0", "", {}, "sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw=="],
 
     "zod": ["zod@4.3.6", "", {}, "sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg=="],
+
+    "@mklyml/plugins/@mklyml/core": ["@mklyml/core@0.1.2", "", { "dependencies": { "zod": "4.3.6" } }, "sha512-f7+S4ku28+ubB6w3kRR3TUnWC5iRIfoPyfED331yRk3BCt5zrFfFADpRAag1e77vu+8QUN34cujFcCF/CYU4RA=="],
   }
 }
