@@ -129,8 +129,8 @@ export function parseRules(css: string): CSSRule[] {
 
     if (!rawSelector || !rawDeclarations) continue;
 
-    // Split comma-separated selectors
-    const selectors = rawSelector.split(',').map(s => s.trim()).filter(Boolean);
+    // Split comma-separated selectors, but keep commas inside :is(...) / attr selectors.
+    const selectors = splitSelectorList(rawSelector);
 
     const declarations = parseDeclarations(rawDeclarations);
 
@@ -140,6 +140,34 @@ export function parseRules(css: string): CSSRule[] {
   }
 
   return rules;
+}
+
+function splitSelectorList(selectorList: string): string[] {
+  const selectors: string[] = [];
+  let current = '';
+  let parenDepth = 0;
+  let bracketDepth = 0;
+
+  for (const ch of selectorList) {
+    if (ch === '(') parenDepth++;
+    else if (ch === ')') parenDepth = Math.max(0, parenDepth - 1);
+    else if (ch === '[') bracketDepth++;
+    else if (ch === ']') bracketDepth = Math.max(0, bracketDepth - 1);
+
+    if (ch === ',' && parenDepth === 0 && bracketDepth === 0) {
+      const trimmed = current.trim();
+      if (trimmed) selectors.push(trimmed);
+      current = '';
+      continue;
+    }
+
+    current += ch;
+  }
+
+  const trimmed = current.trim();
+  if (trimmed) selectors.push(trimmed);
+
+  return selectors;
 }
 
 function pushDeclaration(raw: string, result: Array<[string, string]>): void {
@@ -305,6 +333,13 @@ function selectorMatchesElement(
   parentClassStack: Set<string>[],
   parentTagStack: string[],
 ): boolean {
+  const expandedSelectors = expandIsSelectors(selector);
+  if (expandedSelectors.length > 1 || expandedSelectors[0] !== selector) {
+    return expandedSelectors.some(expanded =>
+      selectorMatchesElement(expanded, elementClasses, tagName, parentClassStack, parentTagStack),
+    );
+  }
+
   // Skip pseudo-selectors (:hover, :focus, etc.) and pseudo-elements (::marker)
   if (/:[\w-]+/.test(selector.replace(/::[\w-]+/g, ''))) {
     const withoutPseudo = selector.replace(/:[\w-]+(?:\([^)]*\))?/g, '');
@@ -346,6 +381,48 @@ function selectorMatchesElement(
     }
   }
   return partIdx < 0;
+}
+
+function expandIsSelectors(selector: string): string[] {
+  const segment = findIsSegment(selector);
+  if (!segment) return [selector];
+
+  const options = splitSelectorList(segment.content);
+  const prefix = selector.slice(0, segment.start);
+  const suffix = selector.slice(segment.end + 1);
+  const variants: string[] = [];
+
+  for (const option of options) {
+    const expanded = `${prefix}${option.trim()}${suffix}`;
+    variants.push(...expandIsSelectors(expanded));
+  }
+
+  return variants;
+}
+
+function findIsSegment(selector: string): { start: number; end: number; content: string } | null {
+  const start = selector.indexOf(':is(');
+  if (start === -1) return null;
+
+  const open = start + 3; // '(' in ':is('
+  let depth = 0;
+
+  for (let i = open; i < selector.length; i++) {
+    const ch = selector[i];
+    if (ch === '(') depth++;
+    else if (ch === ')') {
+      depth--;
+      if (depth === 0) {
+        return {
+          start,
+          end: i,
+          content: selector.slice(open + 1, i),
+        };
+      }
+    }
+  }
+
+  return null;
 }
 
 /**

@@ -1,0 +1,11 @@
+.history
+.DS_Store
+.env
+node_modules/
+dist/
+bun.lock
+.entire/
+.memsearch/
+.playwright-mcp/
+playwright-report/
+test-results/

@@ -22,7 +22,7 @@ import {
   extractMainContent,
   stripNonContentTags,
 } from '../src/css-inliner';
-import type { CompileContext, MklyDocument } from '@mklyml/core';
+import type { CompileContext, MklyBlock, MklyDocument } from '@mklyml/core';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -41,6 +41,35 @@ function compileEmail(source: string, variables: Record<string, string> = {}): s
     variables,
     kits: { core: CORE_KIT, newsletter: NEWSLETTER_KIT },
   }).html;
+}
+
+function mkBlock(overrides: Partial<MklyBlock> & { blockType: string }): MklyBlock {
+  return {
+    blockType: overrides.blockType,
+    properties: overrides.properties ?? {},
+    content: overrides.content ?? '',
+    children: overrides.children ?? [],
+    position: overrides.position ?? { start: { line: 1, column: 1 }, end: { line: 1, column: 1 } },
+    ...(overrides.label !== undefined ? { label: overrides.label } : {}),
+    ...(overrides.contentLineMap !== undefined ? { contentLineMap: overrides.contentLineMap } : {}),
+    ...(overrides.propertyLines !== undefined ? { propertyLines: overrides.propertyLines } : {}),
+  };
+}
+
+function mkDocument(blocks: MklyBlock[]): MklyDocument {
+  return {
+    version: 1,
+    blocks,
+    meta: { version: '1' },
+    styles: [],
+    uses: ['core'],
+    themes: [],
+    presets: [],
+    inlineThemes: [],
+    inlinePresets: [],
+    comments: [],
+    errors: [],
+  };
 }
 
 // ===== Utility functions (utils.ts) =====
@@ -186,129 +215,71 @@ describe('trackUrl — link tracking', () => {
 
 describe('replaceUrls — URL replacement in documents', () => {
   test('returns document unchanged for empty URL map', () => {
-    const doc: MklyDocument = {
-      uses: ['core'],
-      meta: { version: '1' },
-      themes: [],
-      presets: [],
-      styleBlocks: [],
-      blocks: [
-        { type: 'core/text', properties: {}, content: 'Hello', children: [], label: '' },
-      ],
-    };
+    const doc = mkDocument([
+      mkBlock({ blockType: 'core/text', content: 'Hello' }),
+    ]);
     const result = replaceUrls(doc, {});
     expect(result).toBe(doc);
   });
 
   test('replaces URLs in block properties', () => {
-    const doc: MklyDocument = {
-      uses: ['core'],
-      meta: { version: '1' },
-      themes: [],
-      presets: [],
-      styleBlocks: [],
-      blocks: [
-        {
-          type: 'core/image',
-          properties: { src: 'https://old.com/img.png', alt: 'Test' },
-          content: '',
-          children: [],
-          label: '',
-        },
-      ],
-    };
+    const doc = mkDocument([
+      mkBlock({
+        blockType: 'core/image',
+        properties: { src: 'https://old.com/img.png', alt: 'Test' },
+      }),
+    ]);
     const result = replaceUrls(doc, { 'https://old.com/img.png': 'https://new.com/img.png' });
     expect(result.blocks[0].properties.src).toBe('https://new.com/img.png');
   });
 
   test('replaces URLs in block content', () => {
-    const doc: MklyDocument = {
-      uses: ['core'],
-      meta: { version: '1' },
-      themes: [],
-      presets: [],
-      styleBlocks: [],
-      blocks: [
-        {
-          type: 'core/text',
-          properties: {},
-          content: 'Visit https://old.com for more',
-          children: [],
-          label: '',
-        },
-      ],
-    };
+    const doc = mkDocument([
+      mkBlock({
+        blockType: 'core/text',
+        content: 'Visit https://old.com for more',
+      }),
+    ]);
     const result = replaceUrls(doc, { 'https://old.com': 'https://new.com' });
     expect(result.blocks[0].content).toBe('Visit https://new.com for more');
   });
 
   test('replaces URLs in nested children', () => {
-    const doc: MklyDocument = {
-      uses: ['core'],
-      meta: { version: '1' },
-      themes: [],
-      presets: [],
-      styleBlocks: [],
-      blocks: [
-        {
-          type: 'core/section',
-          properties: {},
-          content: '',
-          label: '',
-          children: [
-            {
-              type: 'core/image',
-              properties: { src: 'https://old.com/a.png', alt: 'A' },
-              content: '',
-              children: [],
-              label: '',
-            },
-          ],
-        },
-      ],
-    };
+    const doc = mkDocument([
+      mkBlock({
+        blockType: 'core/section',
+        children: [
+          mkBlock({
+            blockType: 'core/image',
+            properties: { src: 'https://old.com/a.png', alt: 'A' },
+          }),
+        ],
+      }),
+    ]);
     const result = replaceUrls(doc, { 'https://old.com/a.png': 'https://cdn.com/a.png' });
     expect(result.blocks[0].children[0].properties.src).toBe('https://cdn.com/a.png');
   });
 
   test('does not replace non-URL properties', () => {
-    const doc: MklyDocument = {
-      uses: ['core'],
-      meta: { version: '1' },
-      themes: [],
-      presets: [],
-      styleBlocks: [],
-      blocks: [
-        {
-          type: 'core/heading',
-          properties: { level: '2' },
-          content: 'Title',
-          children: [],
-          label: '',
-        },
-      ],
-    };
+    const doc = mkDocument([
+      mkBlock({
+        blockType: 'core/heading',
+        properties: { level: '2' },
+        content: 'Title',
+      }),
+    ]);
     const result = replaceUrls(doc, { '2': '3' });
     expect(result.blocks[0].properties.level).toBe('2');
   });
 
   test('replaces link property in blocks', () => {
-    const doc: MklyDocument = {
-      uses: ['core'],
-      meta: { version: '1' },
-      themes: [],
-      presets: [],
-      styleBlocks: [],
-      blocks: [
-        {
-          type: 'core/card',
-          properties: { link: 'https://old.com/article' },
-          content: 'Card',
-          children: [],
-          label: '',
-        },
-      ],
-    };
+    const doc = mkDocument([
+      mkBlock({
+        blockType: 'core/card',
+        properties: { link: 'https://old.com/article' },
+        content: 'Card',
+      }),
+    ]);
     const result = replaceUrls(doc, { 'https://old.com/article': 'https://new.com/article' });
     expect(result.blocks[0].properties.link).toBe('https://new.com/article');
   });
@@ -602,7 +573,7 @@ describe('email pipeline — multiple style blocks', () => {
       'img: https://example.com/photo.jpg',
     ].join('\n');
     const html = compileEmail(source);
-    expect(html).toContain('border-radius:12px');
+    expect(html).toContain('border-radius:0.75rem');
   });
 });
 
