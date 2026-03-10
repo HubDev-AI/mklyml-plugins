@@ -9,3 +9,4 @@ bun.lock
 .playwright-mcp/
 playwright-report/
 test-results/
+.last-run.json
