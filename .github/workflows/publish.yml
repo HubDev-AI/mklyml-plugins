@@ -33,6 +33,8 @@ jobs:
         run: |
           cd ../mkly && bun install --frozen-lockfile
           cd ../mkly-kits && bun install --frozen-lockfile
+          cd ../mkly-kits/newsletter && bun install --frozen-lockfile
+          cd ../mkly-kits/docs && bun install --frozen-lockfile
           cd $GITHUB_WORKSPACE && bun install --frozen-lockfile
 
       - name: Validate
@@ -44,6 +46,7 @@ jobs:
         run: bun run build
 
       - name: Publish to npm
+        if: env.NODE_AUTH_TOKEN != ''
         run: npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
