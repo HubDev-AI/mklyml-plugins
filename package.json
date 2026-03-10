@@ -32,11 +32,11 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@mklyml/core": "^0.1.0"
+    "@mklyml/core": "^0.2.0"
   },
   "peerDependencies": {
-    "@mklyml/core": ">=0.1.0",
-    "@mklyml/kits": ">=0.1.0"
+    "@mklyml/core": ">=0.2.0",
+    "@mklyml/kits": ">=0.2.0"
   },
   "peerDependenciesMeta": {
     "@mklyml/kits": {
