@@ -11,7 +11,7 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@mklyml/core": "file:../../mkly"
+    "@mklyml/core": "^0.2.0"
   },
   "devDependencies": {
     "typescript": "~5.8.2",
